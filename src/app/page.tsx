@@ -12,28 +12,19 @@ import { Switch } from "@/components/ui/switch";
 import { Download, Check, Mail, LogOut, Save, Clipboard, Lock } from "lucide-react";
 
 /**
- * Marketplace Ad Builder — Single‑User Web App (Fixed)
+ * Marketplace Ad Builder — Single‑User Web App (Client Component)
  * --------------------------------------------------
- * Fixes applied:
- *  - Removed stray comma/"0" from CATALOG end.
- *  - Corrected mismatched quotes in strings (e.g., 36"x80").
- *  - Closed all JSX tags (previous Unterminated JSX error around Items list).
- *  - Added lightweight runtime self‑tests to catch future regressions.
- *
- * Features:
- *  - Single-user login gate (simple passcode). Change ADMIN_PASSCODE below.
- *  - Select an item, fill in measurements / price / qty / photos link.
- *  - Preview Facebook Marketplace ad copy.
- *  - "Approve & Forward" opens an email draft to judsonspence1@gmail.com (mailto) with the ad body.
- *  - Auto-saves to localStorage; export all ads to CSV.
+ * - Fix: mark file as a Client Component ("use client") to allow hooks and framer-motion
+ * - Fix: close all JSX elements; remove stray commas; escape quotes in sizes (36"x80")
+ * - Env: ADMIN_PASSCODE pulled from NEXT_PUBLIC_ADMIN_PASSCODE (Vercel)
+ * - Adds simple runtime self-tests to catch regressions in prod
  */
 
 // ====== CONFIG ======
-// ====== CONFIG ======
-const ADMIN_PASSCODE =
-  (process.env.NEXT_PUBLIC_ADMIN_PASSCODE as string) ?? "JUDDISTHEMAN";
+const ADMIN_PASSCODE = (process.env.NEXT_PUBLIC_ADMIN_PASSCODE as string) ?? "JUDDISTHEMAN"; // Prefer env var; fallback locally
+const DEFAULT_PICKUP = "Near The Villages, FL. Cash/Zelle. Can help load.";
 
-// Item catalog with base templates (from your message). Each has a fixed Title + Base Description + Keywords.
+// Item catalog with base templates (from your brief). Each has a fixed Title + Base Description + Keywords.
 const CATALOG = [
   {
     id: 1,
@@ -56,7 +47,7 @@ const CATALOG = [
     name: "Exterior Door w/ Built-In Blinds (2 available)",
     title: "Exterior Door w/ Built-In Blinds (internal mini-blinds) – prehung slab",
     keywords: "patio door, full lite, door with blinds inside glass, prehung exterior door, 36x80",
-    base: `Full-lite insulated glass w/ internal blinds (sealed – no dust).\nStandard approx. 36\" x 80\" right-hand inswing (verify).\nSteel/fiberglass skin; white. Some rust at lower edge—cosmetic.\n\nCondition: Good overall; wipe down and install.\nNote: Add handing once measured: “hinges on ___ when viewed from outside.”`,
+    base: `Full-lite insulated glass w/ internal blinds (sealed – no dust).\nStandard approx. 36\" x 80\" right-hand inswing (verify).\nSteel/fiberglass skin; white. Some rust at lower edge—cosmetic.\n\nCondition: Good overall; wipe down and install.\nNote: Add handing once measured: "hinges on ___ when viewed from outside."`,
     notes: "",
   },
   {
@@ -80,7 +71,7 @@ const CATALOG = [
     name: "Solid Oak Interior Doors – Multiple Styles (French, Raised-Panel, 20-panel)",
     title: "Solid Oak Interior Doors – French & Raised Panel – upgrade your house",
     keywords: "solid wood door, oak door, French door, interior door 30x80 32x80",
-    base: `Real oak, not hollow-core. Several designs: 6-panel, multi-panel, 15-lite glass, and ornate grid panel.\nMost approx. 30\"–36\" x 80\" (measure to confirm).\nBrass hinges/locks included on some.\n\nCondition: Good; a few small dings; glass clean.\nNotes: put exact widths & handing per door in bullets (ex: “Door #DR-03: 32x80 RH”).`,
+    base: `Real oak, not hollow-core. Several designs: 6-panel, multi-panel, 15-lite glass, and ornate grid panel.\nMost approx. 30\"–36\" x 80\" (measure to confirm).\nBrass hinges/locks included on some.\n\nCondition: Good; a few small dings; glass clean.\nNotes: put exact widths & handing per door in bullets (ex: "Door #DR-03: 32x80 RH").`,
     notes: "",
   },
   {
@@ -317,7 +308,7 @@ export default function App() {
             <Input type="password" value={pass} onChange={e=>setPass(e.target.value)} placeholder="Enter admin passcode" />
           </div>
           <Button className="w-full" onClick={()=> setAuthed(pass === ADMIN_PASSCODE)}>Enter</Button>
-          <p className="text-xs text-muted-foreground">Change the passcode in code: <code>ADMIN_PASSCODE</code>.</p>
+          <p className="text-xs text-muted-foreground">Change the passcode via env var: <code>NEXT_PUBLIC_ADMIN_PASSCODE</code>.</p>
         </CardContent>
       </Card>
     </div>
