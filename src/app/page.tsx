@@ -27,8 +27,11 @@ import { Download, Check, Mail, LogOut, Save, Clipboard, Lock } from "lucide-rea
  */
 
 // ====== CONFIG ======
-const ADMIN_PASSCODE = (process.env.NEXT_PUBLIC_ADMIN_PASSCODE as string) ?? "JUDDISTHEMAN"; // Prefer env var in Vercel; falls back locally
+// ====== CONFIG ======
+const ADMIN_PASSCODE =
+  (process.env.NEXT_PUBLIC_ADMIN_PASSCODE as string) ?? "JUDDISTHEMAN"; 
 const DEFAULT_PICKUP = "Near The Villages, FL. Cash/Zelle. Can help load.";
+
 
 // Item catalog with base templates (from your message). Each has a fixed Title + Base Description + Keywords.
 const CATALOG = [
