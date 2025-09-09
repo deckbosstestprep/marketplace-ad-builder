@@ -14,18 +14,48 @@ import { Download, Check, Mail, LogOut, Save, Clipboard, Lock } from "lucide-rea
 /**
  * Marketplace Ad Builder — Single‑User Web App (Client Component)
  * --------------------------------------------------
- * - Fix: mark file as a Client Component ("use client") to allow hooks and framer-motion
- * - Fix: close all JSX elements; remove stray commas; escape quotes in sizes (36"x80")
- * - Env: ADMIN_PASSCODE pulled from NEXT_PUBLIC_ADMIN_PASSCODE (Vercel)
- * - Adds simple runtime self-tests to catch regressions in prod
+ * - Client component ("use client") so hooks & framer-motion work.
+ * - Clean JSX; no stray commas.
+ * - Env: ADMIN_PASSCODE pulled from NEXT_PUBLIC_ADMIN_PASSCODE (Vercel).
+ * - Runtime self-tests.
+ * - **TypeScript strict**: remove all `any` usages flagged by ESLint.
  */
 
 // ====== CONFIG ======
 const ADMIN_PASSCODE = (process.env.NEXT_PUBLIC_ADMIN_PASSCODE as string) ?? "JUDDISTHEMAN"; // Prefer env var; fallback locally
 const DEFAULT_PICKUP = "Near The Villages, FL. Cash/Zelle. Can help load.";
 
+// ====== Types ======
+interface CatalogItem {
+  id: number;
+  name: string;
+  title: string;
+  keywords: string;
+  base: string;
+  notes: string;
+}
+
+interface ItemState {
+  id: number;
+  name: string;
+  title: string;
+  base: string;
+  keywords: string;
+  notes: string;
+  price: number;
+  priceType: "OBO" | "Firm";
+  qty: number;
+  measurements: string;
+  condition: string;
+  pickup: string;
+  photos: string;
+  approved: boolean;
+}
+
+type CSVRow = Record<string, string | number | boolean | null | undefined>;
+
 // Item catalog with base templates (from your brief). Each has a fixed Title + Base Description + Keywords.
-const CATALOG = [
+const CATALOG: CatalogItem[] = [
   {
     id: 1,
     name: "Weber Genesis/Spirit 4-Burner Stainless Gas Grill (no grates)",
@@ -164,11 +194,11 @@ const loadLS = <T,>(k: string, d: T): T => {
 };
 
 function csvEscape(v: unknown = "") { return String(v).replaceAll('"', '""'); }
-function toCSV(rows: Record<string, unknown>[]) {
+function toCSV(rows: CSVRow[]) {
   const headers = Object.keys(rows[0] || {});
   const lines = [headers.join(',')];
   for (const r of rows) {
-    lines.push(headers.map(h => `"${csvEscape((r as any)[h] ?? '')}"`).join(','));
+    lines.push(headers.map(h => `"${csvEscape(r[h])}"`).join(','));
   }
   return lines.join('\n');
 }
@@ -202,7 +232,7 @@ function inferDefaultPrice(name: string) {
   return 100;
 }
 
-function seedFromCatalog(c: any) {
+function seedFromCatalog(c: CatalogItem): ItemState {
   return {
     id: c.id,
     name: c.name,
@@ -218,10 +248,10 @@ function seedFromCatalog(c: any) {
     pickup: DEFAULT_PICKUP,
     photos: "",
     approved: false,
-  } as any;
+  };
 }
 
-function buildAdBody(it: any, includeKeywords: boolean) {
+function buildAdBody(it: ItemState, includeKeywords: boolean) {
   const priceLine = it.price ? `$${it.price} ${it.priceType || ''}`.trim() : `Price: message me`;
   const qtyLine = it.qty && it.qty>1 ? `Quantity available: ${it.qty}` : ``;
   const measureLine = it.measurements ? `\n\nMeasurements: ${it.measurements}` : '';
@@ -240,7 +270,7 @@ export default function App() {
   const [authed, setAuthed] = useState(false);
   const [pass, setPass] = useState("");
   const [selectedId, setSelectedId] = useState<number>(loadLS('selectedId', 1));
-  const [items, setItems] = useState<any[]>(loadLS('items', CATALOG.map(seedFromCatalog)));
+  const [items, setItems] = useState<ItemState[]>(loadLS('items', CATALOG.map(seedFromCatalog)));
   const [includeKeywords, setIncludeKeywords] = useState<boolean>(loadLS('includeKeywords', true));
 
   useEffect(() => saveLS('selectedId', selectedId), [selectedId]);
@@ -256,7 +286,7 @@ export default function App() {
   const current = items.find(i => i.id === selectedId) || items[0];
   const adBody = useMemo(() => buildAdBody(current, includeKeywords), [current, includeKeywords]);
 
-  function handleField(k: string, v: any) {
+  function handleField<K extends keyof ItemState>(k: K, v: ItemState[K]) {
     setItems(prev => prev.map(it => it.id === current.id ? { ...it, [k]: v } : it));
   }
 
@@ -273,7 +303,7 @@ export default function App() {
   }
 
   function downloadCSV() {
-    const rows = items.map(i => ({
+    const rows: CSVRow[] = items.map(i => ({
       id: i.id,
       name: i.name,
       title: i.title,
@@ -443,7 +473,7 @@ function runSelfTests() {
   console.assert(typeof ad === 'string' && ad.includes(sample.title) && ad.includes('Keywords:'), 'Ad body should include title and keywords block');
 
   // Test 4: CSV export shape
-  const rows = seeded.map(s => ({ id: s.id, name: s.name }));
-  const csv = toCSV(rows as any);
+  const rows: CSVRow[] = seeded.map(s => ({ id: s.id, name: s.name }));
+  const csv = toCSV(rows);
   console.assert(csv.split('\n').length === rows.length + 1, 'CSV should have header + one line per row');
 }
